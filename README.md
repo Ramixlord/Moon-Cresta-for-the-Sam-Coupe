@@ -4,7 +4,7 @@ Nichibutsu's 1980 arcade classic, rebuilt for the SAM Coupé in Z80 machine code
 
 ![Moon Cresta title screen](images/title.png)
 
-**[Download the disk image (MoonCresta.mgt)](download/MoonCresta.mgt)** · **[Project page](https://YOUR-USERNAME.github.io/mooncresta/)**
+**[Download the disk image (MoonCresta.mgt)](download/MoonCresta.mgt)** · **[Project page](https://Ramixlord.github.io/mooncresta/)**
 
 ## Play
 
