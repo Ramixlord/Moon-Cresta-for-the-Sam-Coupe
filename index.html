@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moon Cresta — SAM Coupé</title>
+<meta name="description" content="Moon Cresta for the SAM Coupé: a new Z80 conversion of Nichibutsu's 1980 arcade classic, matched to the original arcade program.">
+<meta property="og:title" content="Moon Cresta for the SAM Coupé">
+<meta property="og:description" content="Nichibutsu's 1980 arcade classic, rebuilt for the SAM Coupé from the original arcade program. By Lightning Studios.">
+<meta property="og:image" content="images/title.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05060c;
+    --panel: #0d1020;
+    --line: #1d2342;
+    --text: #d9def2;
+    --muted: #8a92b8;
+    --cyan: #3ec8ff;
+    --yellow: #ffd23f;
+    --green: #3ddc6a;
+    --magenta: #ff4fd8;
+    --red: #ff4b4b;
+    --pixel: "Press Start 2P", monospace;
+    --sans: "IBM Plex Sans", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 var(--sans);
+    overflow-x: hidden;
+  }
+  /* starfield */
+  #stars { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; }
+  a { color: var(--cyan); }
+  img.shot { width: 100%; height: auto; display: block; image-rendering: pixelated; border: 2px solid var(--line); background: #000; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 16px; }
+  .pixel { font-family: var(--pixel); letter-spacing: .02em; }
+
+  /* top bar */
+  nav { position: sticky; top: 0; z-index: 10; background: rgba(5,6,12,.86); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+  nav .wrap { display: flex; gap: 20px; align-items: center; height: 52px; overflow-x: auto; white-space: nowrap; }
+  nav .brand { font-family: var(--pixel); font-size: 11px; color: var(--yellow); text-decoration: none; margin-right: auto; }
+  nav a.l { font-family: var(--pixel); font-size: 9px; color: var(--muted); text-decoration: none; }
+  nav a.l:hover { color: var(--cyan); }
+
+  /* hero */
+  header { padding: 56px 0 40px; }
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center; }
+  .kicker { font-family: var(--pixel); font-size: 10px; color: var(--green); margin: 0 0 18px; }
+  h1 { font-family: var(--pixel); font-size: clamp(26px, 5vw, 46px); line-height: 1.25; margin: 0 0 18px; color: var(--yellow); text-shadow: 3px 3px 0 #b3261e; }
+  h1 span { display: block; font-size: .42em; color: var(--cyan); text-shadow: none; margin-top: 14px; }
+  .lead { font-size: 19px; color: var(--text); margin: 0 0 26px; max-width: 34em; }
+  .btns { display: flex; flex-wrap: wrap; gap: 14px; }
+  .btn { font-family: var(--pixel); font-size: 11px; text-decoration: none; padding: 15px 18px; border: 2px solid var(--yellow); color: #000; background: var(--yellow); box-shadow: 4px 4px 0 #b3261e; }
+  .btn:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #b3261e; }
+  .btn.ghost { background: transparent; color: var(--yellow); }
+  .hero-shot { position: relative; }
+  .hero-shot img { border-color: #2c3566; box-shadow: 0 0 0 6px #0b0e1d, 0 0 60px rgba(62,200,255,.18); }
+  .credit00 { font-family: var(--pixel); font-size: 9px; color: #2f6bff; margin-top: 12px; }
+
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  h2 { font-family: var(--pixel); font-size: clamp(15px, 2.4vw, 20px); color: var(--yellow); margin: 0 0 10px; }
+  h2 small { display: block; font-family: var(--sans); font-size: 17px; color: var(--muted); margin-top: 12px; font-weight: 400; }
+  .sub { color: var(--muted); margin: 0 0 28px; max-width: 46em; }
+
+  /* stat strip */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 8px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); padding: 18px 16px; }
+  .stat b { display: block; font-family: var(--pixel); font-size: 15px; color: var(--cyan); margin-bottom: 10px; }
+  .stat span { font-size: 14px; color: var(--muted); }
+
+  /* gallery */
+  .gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  figure { margin: 0; }
+  figcaption { font-family: var(--pixel); font-size: 9px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+  figcaption b { color: var(--text); font-weight: 400; }
+
+  /* features */
+  .feat { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); padding: 20px 20px 18px; }
+  .card h3 { font-family: var(--pixel); font-size: 11px; color: var(--green); margin: 0 0 12px; line-height: 1.5; }
+  .card p { margin: 0; color: var(--text); font-size: 16px; }
+
+  /* enemies */
+  .enemies { width: 100%; border-collapse: collapse; font-size: 16px; }
+  .enemies th, .enemies td { text-align: left; padding: 12px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .enemies th { font-family: var(--pixel); font-size: 9px; color: var(--muted); font-weight: 400; }
+  .enemies td.n { font-family: var(--pixel); font-size: 11px; white-space: nowrap; }
+  .enemies td.p { font-family: var(--pixel); font-size: 11px; color: var(--yellow); white-space: nowrap; text-align: right; }
+
+  /* accuracy table */
+  .acc { display: grid; grid-template-columns: 220px 1fr; border-top: 1px solid var(--line); }
+  .acc div { padding: 13px 14px; border-bottom: 1px solid var(--line); font-size: 16px; }
+  .acc div:nth-child(odd) { font-family: var(--pixel); font-size: 10px; color: var(--cyan); line-height: 1.6; }
+
+  /* pipeline */
+  ol.pipe { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  ol.pipe li { counter-increment: s; background: var(--panel); border: 1px solid var(--line); padding: 18px 16px; position: relative; font-size: 15px; }
+  ol.pipe li::before { content: counter(s); font-family: var(--pixel); font-size: 18px; color: var(--magenta); display: block; margin-bottom: 12px; }
+  ol.pipe li b { display: block; font-family: var(--pixel); font-size: 10px; color: var(--text); margin-bottom: 10px; font-weight: 400; }
+  ol.pipe li:not(:last-child)::after { content: "▶"; position: absolute; right: -11px; top: 22px; color: var(--magenta); font-size: 12px; }
+
+  ul.tech { padding-left: 20px; margin: 0; }
+  ul.tech li { margin-bottom: 12px; }
+  ul.tech li b { color: var(--cyan); font-weight: 600; }
+
+  .how { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+  .keys { font-family: var(--pixel); font-size: 10px; line-height: 2.2; color: var(--text); background: var(--panel); border: 1px solid var(--line); padding: 18px 20px; }
+  .keys em { color: var(--yellow); font-style: normal; }
+
+  footer { padding: 46px 0 60px; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+  footer .pixel { font-size: 10px; color: var(--red); margin-bottom: 14px; }
+
+  @media (max-width: 860px) {
+    .hero, .how { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .gallery { grid-template-columns: repeat(2, 1fr); }
+    .feat { grid-template-columns: 1fr; }
+    ol.pipe { grid-template-columns: 1fr; }
+    ol.pipe li:not(:last-child)::after { content: "▼"; right: 16px; top: auto; bottom: -15px; }
+    .acc { grid-template-columns: 1fr; }
+    .acc div:nth-child(odd) { border-bottom: 0; padding-bottom: 0; }
+  }
+  @media (max-width: 520px) {
+    .gallery { grid-template-columns: 1fr; }
+    .enemies td.d { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { #stars { display: none; } }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top">MOON CRESTA</a>
+    <a class="l" href="#screens">SCREENS</a>
+    <a class="l" href="#features">FEATURES</a>
+    <a class="l" href="#arcade">ARCADE</a>
+    <a class="l" href="#tech">TECH</a>
+    <a class="l" href="#play">PLAY</a>
+  </div>
+</nav>
+
+<header id="top">
+  <div class="wrap hero">
+    <div>
+      <p class="kicker">SAM COUPÉ · LIGHTNING STUDIOS · 2026</p>
+      <h1>MOON CRESTA<span>TRIP TO THE SPACE WAR</span></h1>
+      <p class="lead">Nichibutsu's 1980 arcade classic, rebuilt for the SAM Coupé in Z80 machine code — with its attack patterns, sounds, docking, scoring and loop taken from the original arcade program.</p>
+      <div class="btns">
+        <a class="btn" href="download/MoonCresta.mgt" download>DOWNLOAD DISK</a>
+        <a class="btn ghost" href="#screens">SEE IT</a>
+      </div>
+    </div>
+    <div class="hero-shot">
+      <img class="shot" src="images/title.png" width="512" height="384" alt="Moon Cresta title screen on the SAM Coupé">
+      <div class="credit00">CREDIT 00 — INSERT COIN</div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><b>Z80</b><span>About 8,000 lines of assembly, 24.6 KB of game code</span></div>
+      <div class="stat"><b>MODE 4</b><span>256 × 192, 16 colours, double-buffered</span></div>
+      <div class="stat"><b>SAA1099</b><span>The arcade's music and effects on six channels</span></div>
+      <div class="stat"><b>1–2 UP</b><span>Players take turns, redefinable keys</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>SCREENS<small>Straight from the SAM, in SimCoupé.</small></h2>
+    <div class="gallery">
+      <figure><img class="shot" src="images/coldeye.png" width="512" height="384" loading="lazy" alt="Cold Eye wave"><figcaption><b>COLD EYE</b> — the opening wave</figcaption></figure>
+      <figure><img class="shot" src="images/superfly.png" width="512" height="384" loading="lazy" alt="Super Fly wave"><figcaption><b>SUPER FLY</b> — fast, swarming dives</figcaption></figure>
+      <figure><img class="shot" src="images/fourd.png" width="512" height="384" loading="lazy" alt="Four-D wave"><figcaption><b>FOUR-D</b> — scatters and re-forms</figcaption></figure>
+      <figure><img class="shot" src="images/meteor.png" width="512" height="384" loading="lazy" alt="Meteor wave with a meteor breaking up"><figcaption><b>METEORS</b> — break up into a debris ring</figcaption></figure>
+      <figure><img class="shot" src="images/atomic.png" width="512" height="384" loading="lazy" alt="Atomic Pile wave"><figcaption><b>ATOMIC PILE</b> — skulls that dive as missiles</figcaption></figure>
+      <figure><img class="shot" src="images/docking.png" width="512" height="384" loading="lazy" alt="Docking against the clock"><figcaption><b>DOCKING</b> — against gravity and the clock</figcaption></figure>
+      <figure><img class="shot" src="images/docked.png" width="512" height="384" loading="lazy" alt="Docking bonus screen"><figcaption><b>RIGHT ON !</b> — all three stages × 300</figcaption></figure>
+      <figure><img class="shot" src="images/farout.png" width="512" height="384" loading="lazy" alt="Far Out ending"><figcaption><b>FAR OUT !</b> — off the top and round again</figcaption></figure>
+      <figure><img class="shot" src="images/intro.png" width="512" height="384" loading="lazy" alt="Lightning Studios intro"><figcaption><b>LIGHTNING STUDIOS</b> — the boot intro</figcaption></figure>
+      <figure><img class="shot" src="images/menu.png" width="512" height="384" loading="lazy" alt="Main menu"><figcaption><b>MAIN MENU</b> — players, keys, credits</figcaption></figure>
+      <figure><img class="shot" src="images/scoretable.png" width="512" height="384" loading="lazy" alt="Score advance table"><figcaption><b>SCORE ADVANCE TABLE</b></figcaption></figure>
+      <figure><img class="shot" src="images/story.png" width="512" height="384" loading="lazy" alt="Trip to the Space War story page"><figcaption><b>TRY IT NOW !!</b> — the story page</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2>THE WHOLE ARCADE GAME<small>From the moment the disk boots to the high-score table.</small></h2>
+    <div class="feat">
+      <div class="card"><h3>THE THREE-STAGE ROCKET</h3><p>Lose a stage and the survivors regroup. Each stage fires on its own, so two or three shots can be in the air at once.</p></div>
+      <div class="card"><h3>DOCKING</h3><p>The next stage rises from below and you bring your ship down onto it against gravity and drift before the 30-second clock runs out. Seconds left × 100, × 200 or × 300, depending on which stages join.</p></div>
+      <div class="card"><h3>FAR OUT</h3><p>Clear the last wave and the rocket blasts off the top of the screen. The game loops harder, and you start again with a single stage.</p></div>
+      <div class="card"><h3>EXTRA ROCKET</h3><p>Earned at 30,000 points with its own jingle — and one extra game when you run out.</p></div>
+      <div class="card"><h3>1 OR 2 PLAYERS</h3><p>Insert credits from the main menu, pick one or two players, and take turns after each hit.</p></div>
+      <div class="card"><h3>DEFINE KEYS</h3><p>Set your own left, right and fire. Cursor keys and the SAM joystick work too.</p></div>
+      <div class="card"><h3>FULL ATTRACT MODE</h3><p>Title, main menu, score advance table, best 5 pilots and the “Trip to the Space War” story page, typed out a line a second.</p></div>
+      <div class="card"><h3>HIGH SCORES</h3><p>Enter your initials. The top scorer's initials take the place of the Nichibutsu logo under HI-SCORE.</p></div>
+    </div>
+
+    <h2 style="margin-top:48px">THE ENEMIES</h2>
+    <table class="enemies">
+      <thead><tr><th>NAME</th><th class="d">BEHAVIOUR</th><th style="text-align:right">PTS</th></tr></thead>
+      <tbody>
+        <tr><td class="n" style="color:#3e7bff">COLD EYE</td><td class="d">Swoops in on arcade flight paths and dives at the rocket</td><td class="p">50</td></tr>
+        <tr><td class="n" style="color:#ffb43f">SUPER FLY</td><td class="d">Fast and erratic, attacking in swarms</td><td class="p">30</td></tr>
+        <tr><td class="n" style="color:#3ddc6a">FOUR-D</td><td class="d">Spreads out and re-forms as it attacks</td><td class="p">60</td></tr>
+        <tr><td class="n" style="color:#ff6b3d">METEOR</td><td class="d">Rains down in a storm; breaks up into a debris ring when shot</td><td class="p">200</td></tr>
+        <tr><td class="n" style="color:#ff4fd8">ATOMIC PILE</td><td class="d">Skulls that turn into diving missiles, faster on every loop</td><td class="p">100</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="arcade">
+  <div class="wrap">
+    <h2>BUILT FROM THE ARCADE<small>Nothing was guessed from videos.</small></h2>
+    <p class="sub">The original Moon Cresta ROM was decoded and run in a purpose-built arcade emulator that logs sprites, sound and memory frame by frame. Every part of the SAM version was checked side by side against it.</p>
+    <div class="acc">
+      <div>ENEMY FLIGHT</div><div>The arcade's 28-direction velocity table and 96 flight segments, driven by the same phase machine, so every swoop, dive and loop follows the arcade path.</div>
+      <div>WAVES &amp; REGROUPS</div><div>How each wave enters; the frozen pause after a hit; the spin and shrink into the centre; the Atomic Piles drifting off-screen.</div>
+      <div>MUSIC &amp; JINGLES</div><div>The arcade melody player and all 17 of its tunes, from the stage-start fanfare to a separate kill jingle for each enemy type.</div>
+      <div>THE SHOT</div><div>Modelled on the arcade's own sound circuit: a rough “pssh” that rises to about 3.9 kHz and fades over half a second.</div>
+      <div>EXPLOSIONS</div><div>The arcade's choice for each event — a small burst for kills, a spreading debris ring for meteors, a 32 × 32 blast for the rocket.</div>
+      <div>FIRING RULES</div><div>One stage fires per press: the first of I, II and III whose own shot has finished.</div>
+      <div>DOCKING PHYSICS</div><div>The arcade's throttle model for gravity and drift, the 30:0 clock, the ±7-pixel touchdown window, and the crash and time-out outcomes.</div>
+      <div>SCORING</div><div>Kill values, the docking multipliers, the 30,000-point extra rocket and the extra game.</div>
+      <div>FAR OUT &amp; THE LOOP</div><div>The rocket's climb, the text timing, and the restart with a single stage.</div>
+    </div>
+  </div>
+</section>
+
+<section id="tech">
+  <div class="wrap">
+    <h2>UNDER THE HOOD<small>An engine written for the SAM's 6 MHz Z80.</small></h2>
+    <div class="how">
+      <ul class="tech">
+        <li><b>Graphics.</b> Mode 4 with two screen buffers swapped every frame, so nothing tears. Sprites are masked run-length data that skips empty pixels; each buffer keeps its own list of what to erase.</li>
+        <li><b>Mapping the arcade.</b> The arcade's 224 × 256 portrait screen maps onto the SAM's 256 × 192 landscape by shifting x 16 pixels and scaling y by ¾, so its paths carry over directly.</li>
+        <li><b>Timing.</b> The SAM runs at 50 frames a second while the arcade logic runs at 30 updates; a fixed-point accumulator paces each piece of logic at its original rate.</li>
+      </ul>
+      <ul class="tech">
+        <li><b>Sound.</b> The arcade's melody and effect players ported to the SAA1099, with every pitch recalculated for the SAM's chip. The shot mixes tone and noise for the arcade's rough edge.</li>
+        <li><b>Memory.</b> Game code sits in one 32 KB block; enemy graphics are swapped in from paged banks for each wave.</li>
+        <li><b>Starfield &amp; text.</b> The stars only draw on empty background, and the CREDIT line and messages are redrawn under the sprites, so ships pass cleanly over them.</li>
+      </ul>
+    </div>
+
+    <h2 style="margin-top:48px">HOW IT'S BUILT<small>One script goes from artwork to a bootable disk in seconds.</small></h2>
+    <ol class="pipe">
+      <li><b>GRAPHICS</b>Sprites cut from the artwork sheets, plus font, logos and loading screen, packed into the SAM sprite format.</li>
+      <li><b>ARCADE DATA</b>Flight tables, spawn points, melodies and effects extracted from the arcade ROM.</li>
+      <li><b>ASSEMBLY</b>The Z80 source is assembled with pyz80.</li>
+      <li><b>DISK</b>MasterDOS, a BASIC loader, the intro, the loading screen and the game, written to one 800K disk.</li>
+      <li><b>TESTING</b>Every build runs in SimCoupé under script control and is compared with the arcade emulator.</li>
+    </ol>
+  </div>
+</section>
+
+<section id="play">
+  <div class="wrap how">
+    <div>
+      <h2>PLAY IT<small>Real SAM or SimCoupé.</small></h2>
+      <p>Download <a href="download/MoonCresta.mgt" download>MoonCresta.mgt</a> and boot it. On a real SAM Coupé, write the image to an 800K disk; in SimCoupé, insert it in drive 1 and reset. The disk loads the Lightning Studios intro, then the loading screen, then the game.</p>
+      <p>Press <b>4</b> to insert a credit, choose <b>1</b> or <b>2</b> players, and press fire.</p>
+      <div class="btns" style="margin-top:22px"><a class="btn" href="download/MoonCresta.mgt" download>DOWNLOAD DISK</a></div>
+    </div>
+    <div class="keys">
+      <em>1</em> 1 PLAYER<br>
+      <em>2</em> 2 PLAYERS<br>
+      <em>3</em> DEFINE KEYS<br>
+      <em>4</em> INSERT CREDIT<br>
+      <em>Z X SPACE</em> LEFT RIGHT FIRE<br>
+      <em>CURSORS / JOYSTICK</em> ALSO WORK<br>
+      <em>FIRE</em> HELD WHILE DOCKING = THRUST
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="pixel">2026 LIGHTNING STUDIOS</div>
+    <p>SAM Coupé conversion by Lightning Studios — artwork, loading screen, intro, direction and play-testing. Z80 programming written with Claude (Anthropic), checked against the arcade ROM throughout.</p>
+    <p>Moon Cresta © 1980 Nichibutsu. This is a fan conversion and is not affiliated with or endorsed by the rights holders.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const c = document.getElementById('stars');
+  if (!c || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const x = c.getContext('2d');
+  const cols = ['#ffffff', '#3ec8ff', '#ffd23f', '#ff4fd8', '#3ddc6a', '#ff4b4b'];
+  let w, h, stars = [];
+  function size() {
+    w = c.width = innerWidth; h = c.height = innerHeight;
+    stars = Array.from({ length: Math.round(w * h / 9000) }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      v: 0.2 + Math.random() * 0.8, c: cols[(Math.random() * cols.length) | 0], t: Math.random() * 60
+    }));
+  }
+  function tick() {
+    x.fillStyle = '#05060c'; x.fillRect(0, 0, w, h);
+    for (const s of stars) {
+      s.y += s.v; if (s.y > h) { s.y = 0; s.x = Math.random() * w; }
+      s.t = (s.t + 1) % 60;
+      if (s.t < 50) { x.fillStyle = s.c; x.fillRect(s.x | 0, s.y | 0, 2, 2); }
+    }
+    requestAnimationFrame(tick);
+  }
+  addEventListener('resize', size); size(); tick();
+})();
+</script>
+</body>
+</html>
